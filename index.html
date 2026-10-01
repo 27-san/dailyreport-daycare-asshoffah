@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAYCARE AS-SHOFFAH - Dasbor Laporan Kegiatan Harian</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js for Growth Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Font Inter & Fredoka -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                        },
+                        sunshine: '#fef08a',
+                        mint: '#a7f3d0',
+                        sky: '#bae6fd',
+                        lavender: '#ddd6fe',
+                        coral: '#fbcfe8'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Fredoka', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fff8f8;
+        }
+        .font-display {
+            font-family: 'Fredoka', cursive;
+        }
+        .card-rainbow-1 { border-top: 6px solid #ef4444; }
+        .card-rainbow-2 { border-top: 6px solid #f59e0b; }
+        .card-rainbow-3 { border-top: 6px solid #10b981; }
+        .card-rainbow-4 { border-top: 6px solid #3b82f6; }
+        .card-rainbow-5 { border-top: 6px solid #8b5cf6; }
+
+        .glass-header {
+            background: rgba(225, 29, 72, 0.95);
+            backdrop-filter: blur(8px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #ffe4e6;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f43f5e;
+            border-radius: 10px;
+        }
+
+        .modal-active {
+            display: flex !important;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-in-out bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700">
+        <i id="toast-icon" class="fas fa-check-circle text-emerald-400 text-xl"></i>
+        <span id="toast-msg" class="font-medium">Pesan berhasil disimpan!</span>
+    </div>
+
+    <!-- Header App Bar -->
+    <header class="glass-header text-white sticky top-0 z-40 shadow-lg border-b border-red-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="refreshDashboard()">
+                    <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-md transform rotate-3 hover:rotate-0 transition-transform">
+                        <i class="fas fa-child-reaching text-brand-600 text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-display text-xl sm:text-2xl font-bold tracking-wide text-white leading-tight">
+                            DAYCARE AS-SHOFFAH
+                        </h1>
+                        <p class="text-xs text-red-100 font-medium tracking-wider flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                            Laporan Kegiatan & Tumbuh Kembang Anak
+                        </p>
+                    </div>
+                </div>
+
+                <!-- User Role Controls -->
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div id="role-badge-container" class="hidden sm:flex items-center bg-red-800/80 border border-red-500/50 rounded-full px-3 py-1.5 text-xs text-red-100">
+                        <i id="role-icon" class="fas fa-user-shield mr-2 text-yellow-300"></i>
+                        <span id="role-text" class="font-semibold">Mode Guru</span>
+                    </div>
+
+                    <!-- Switcher Button -->
+                    <button onclick="toggleRole()" class="bg-yellow-400 hover:bg-yellow-300 text-red-950 font-bold text-xs sm:text-sm px-3 py-2 rounded-xl transition shadow-md flex items-center gap-1.5">
+                        <i class="fas fa-repeat"></i>
+                        <span class="hidden sm:inline">Peran:</span>
+                        <span id="target-role-label">Mode Orang Tua</span>
+                    </button>
+
+                    <!-- Backup / Restore Button for Teacher -->
+                    <button onclick="openModalBackup()" title="Backup / Restore Data JSON" class="guru-only bg-red-800 hover:bg-red-900 text-white w-9 h-9 rounded-xl flex items-center justify-center transition border border-red-600">
+                        <i class="fas fa-database text-sm"></i>
+                    </button>
+
+                    <!-- Logout / Change Account Button -->
+                    <button onclick="logout()" title="Keluar / Ganti Akun" class="bg-red-800 hover:bg-red-900 text-white w-9 h-9 rounded-xl flex items-center justify-center transition border border-red-600">
+                        <i class="fas fa-right-from-bracket text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+        <!-- Top Alert / Controls Bar -->
+        <div class="bg-gradient-to-r from-brand-600 via-rose-500 to-amber-500 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-display font-bold">AS-SHOFFAH</div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <div>
+                    <span class="bg-white/20 text-white font-medium text-xs px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
+                        <i class="fas fa-calendar-day mr-1"></i> Tanggal Laporan
+                    </span>
+                    <div class="mt-2 flex items-center space-x-3">
+                        <input type="date" id="selected-date" onchange="onDateChange()" class="bg-white/90 text-slate-800 font-semibold px-4 py-2 rounded-xl text-sm sm:text-base border-0 focus:ring-2 focus:ring-yellow-300 shadow-inner">
+                        <span id="day-name-display" class="font-display text-lg sm:text-2xl font-bold text-yellow-200">Kamis</span>
+                    </div>
+                </div>
+
+                <!-- Child Selector for Teacher -->
+                <div id="child-selector-wrapper" class="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20">
+                    <label class="block text-xs font-medium text-red-100 mb-1">Pilih Anak yang Ditampilkan:</label>
+                    <div class="flex items-center space-x-2">
+                        <select id="child-select" onchange="onChildSelectChange()" class="bg-white text-slate-800 font-bold px-4 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 w-full sm:w-64 shadow">
+                            <!-- Filled dynamically -->
+                        </select>
+                        <button id="btn-add-child" onclick="openModalTambahAnak()" class="guru-only bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-2 rounded-xl text-sm transition shadow flex items-center gap-1 shrink-0">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Tambah Anak</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs Bar -->
+        <div class="bg-white rounded-2xl p-2 shadow-lg border border-rose-100 flex flex-wrap gap-2 justify-between sm:justify-start overflow-x-auto custom-scrollbar">
+            <button id="tab-btn-laporan" onclick="switchTab('laporan')" class="tab-btn flex-1 sm:flex-none px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md">
+                <i class="fas fa-calendar-day"></i>
+                <span>Laporan Harian</span>
+            </button>
+
+            <button id="tab-btn-perkembangan" onclick="switchTab('perkembangan')" class="tab-btn flex-1 sm:flex-none px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                <i class="fas fa-chart-line"></i>
+                <span>Tumbuh Kembang</span>
+            </button>
+
+            <button id="tab-btn-biodata" onclick="switchTab('biodata')" class="tab-btn flex-1 sm:flex-none px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                <i class="fas fa-id-card"></i>
+                <span>Biodata Anak</span>
+            </button>
+
+            <button id="tab-btn-komunikasi" onclick="switchTab('komunikasi')" class="tab-btn flex-1 sm:flex-none px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200">
+                <i class="fas fa-comments"></i>
+                <span>Komunikasi</span>
+            </button>
+        </div>
+
+        <!-- SECTION 1: DAILY REPORT KEGIATAN HARIAN -->
+        <section id="sec-laporan" class="space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h3 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-heart text-brand-600"></i>
+                        Laporan Kegiatan Harian
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-500">Aktivitas harian anak selama di Daycare As-Shoffah</p>
+                </div>
+
+                <!-- Arrival & Pickup Time Info Widget -->
+                <div class="flex items-center gap-3 bg-white px-4 py-2.5 rounded-2xl shadow-md border border-rose-100">
+                    <div class="text-xs">
+                        <span class="text-slate-400 block font-medium">Jam Kedatangan:</span>
+                        <span id="time-arrival" class="font-bold text-emerald-600 text-sm">07:30 WIB</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <div class="text-xs">
+                        <span class="text-slate-400 block font-medium">Jam Penjemputan:</span>
+                        <span id="time-pickup" class="font-bold text-brand-600 text-sm">16:15 WIB</span>
+                    </div>
+                    <button onclick="openModalEditTime()" class="guru-only ml-2 bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl transition text-xs">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Activity Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- 1. CIRCLE TIME -->
+                <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-100 card-rainbow-1 flex flex-col justify-between hover:shadow-xl transition">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-red-100 text-red-700 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                                <i class="fas fa-sun text-amber-500"></i> Circle Time
+                            </span>
+                            <button onclick="openModalEditActivity('circle_time')" class="guru-only text-xs bg-slate-100 hover:bg-red-50 text-red-600 px-2.5 py-1 rounded-lg font-semibold transition">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                        </div>
+
+                        <div class="mb-3 rounded-2xl overflow-hidden shadow-sm h-48 bg-slate-100 relative">
+                            <img id="img-circle_time" src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&q=80" alt="Circle Time" class="w-full h-full object-cover">
+                        </div>
+
+                        <h4 id="title-circle_time" class="font-bold text-slate-900 text-base mb-1">Doa Pagi & Bernyanyi Bersama</h4>
+                        <p id="desc-circle_time" class="text-xs sm:text-sm text-slate-600 leading-relaxed">Anak sangat bersemangat mengikuti ikrar pagi, berdoa bersama guru, dan menyanyikan lagu-lagu Islami dengan ceria.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400 font-medium">
+                        <span><i class="far fa-clock mr-1"></i>08:00 - 09:00 WIB</span>
+                        <span id="badge-circle_time" class="text-emerald-600 font-bold">Sangat Baik</span>
+                    </div>
+                </div>
+
+                <!-- 2. KEGIATAN BELAJAR -->
+                <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-100 card-rainbow-2 flex flex-col justify-between hover:shadow-xl transition">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                                <i class="fas fa-shapes text-amber-600"></i> Kegiatan Belajar
+                            </span>
+                            <button onclick="openModalEditActivity('belajar')" class="guru-only text-xs bg-slate-100 hover:bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg font-semibold transition">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                        </div>
+
+                        <div class="mb-3 rounded-2xl overflow-hidden shadow-sm h-48 bg-slate-100 relative">
+                            <img id="img-belajar" src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=600&q=80" alt="Kegiatan Belajar" class="w-full h-full object-cover">
+                        </div>
+
+                        <h4 id="title-belajar" class="font-bold text-slate-900 text-base mb-1">Mengenal Warna & Motorik Halus</h4>
+                        <p id="desc-belajar" class="text-xs sm:text-sm text-slate-600 leading-relaxed">Aktivitas meronce manik-manik warna-warni dan menyusun balok kayu. Melatih fokus, genggaman jari, dan kreativitas.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400 font-medium">
+                        <span><i class="far fa-clock mr-1"></i>09:15 - 10:30 WIB</span>
+                        <span id="badge-belajar" class="text-emerald-600 font-bold">Aktif & Fokus</span>
+                    </div>
+                </div>
+
+                <!-- 3. MAKAN SIANG -->
+                <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-100 card-rainbow-3 flex flex-col justify-between hover:shadow-xl transition">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                                <i class="fas fa-utensils text-emerald-600"></i> Makan Siang
+                            </span>
+                            <button onclick="openModalEditActivity('makan')" class="guru-only text-xs bg-slate-100 hover:bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-lg font-semibold transition">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                        </div>
+
+                        <div class="mb-3 rounded-2xl overflow-hidden shadow-sm h-48 bg-slate-100 relative">
+                            <img id="img-makan" src="https://images.unsplash.com/photo-1576867757603-05b134ebc379?auto=format&fit=crop&w=600&q=80" alt="Makan Siang" class="w-full h-full object-cover">
+                        </div>
+
+                        <h4 id="title-makan" class="font-bold text-slate-900 text-base mb-1">Menu: Nasi, Sup Ayam & Tempe</h4>
+                        <p id="desc-makan" class="text-xs sm:text-sm text-slate-600 leading-relaxed">Makan siang habis 1 porsi penuh. Anak mau makan sayur wortel dan buncis sendiri tanpa disuapi berlebihan.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400 font-medium">
+                        <span><i class="far fa-clock mr-1"></i>11:30 - 12:15 WIB</span>
+                        <span id="badge-makan" class="text-emerald-600 font-bold">Habis 1 Porsi</span>
+                    </div>
+                </div>
+
+                <!-- 4. TIDUR SIANG -->
+                <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-100 card-rainbow-4 flex flex-col justify-between hover:shadow-xl transition">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-sky-100 text-sky-800 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                                <i class="fas fa-bed text-sky-600"></i> Tidur Siang
+                            </span>
+                            <button onclick="openModalEditActivity('tidur')" class="guru-only text-xs bg-slate-100 hover:bg-sky-50 text-sky-600 px-2.5 py-1 rounded-lg font-semibold transition">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                        </div>
+
+                        <div class="mb-3 rounded-2xl overflow-hidden shadow-sm h-48 bg-slate-100 relative">
+                            <img id="img-tidur" src="https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=600&q=80" alt="Tidur Siang" class="w-full h-full object-cover">
+                        </div>
+
+                        <h4 id="title-tidur" class="font-bold text-slate-900 text-base mb-1">Tidur Nyenyak 2 Jam</h4>
+                        <p id="desc-tidur" class="text-xs sm:text-sm text-slate-600 leading-relaxed">Setelah berwudhu dan mendengarkan murottal, anak langsung tertidur lelap tanpa rewel.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400 font-medium">
+                        <span><i class="far fa-clock mr-1"></i>12:30 - 14:30 WIB</span>
+                        <span id="badge-tidur" class="text-emerald-600 font-bold">Nyenyak</span>
+                    </div>
+                </div>
+
+                <!-- 5. KEGIATAN SORE -->
+                <div class="bg-white rounded-3xl p-5 shadow-lg border border-slate-100 card-rainbow-5 flex flex-col justify-between hover:shadow-xl transition md:col-span-2 lg:col-span-1">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="bg-purple-100 text-purple-800 font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1.5">
+                                <i class="fas fa-cloud-sun text-purple-600"></i> Kegiatan Sore
+                            </span>
+                            <button onclick="openModalEditActivity('sore')" class="guru-only text-xs bg-slate-100 hover:bg-purple-50 text-purple-600 px-2.5 py-1 rounded-lg font-semibold transition">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                        </div>
+
+                        <div class="mb-3 rounded-2xl overflow-hidden shadow-sm h-48 bg-slate-100 relative">
+                            <img id="img-sore" src="https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=600&q=80" alt="Kegiatan Sore" class="w-full h-full object-cover">
+                        </div>
+
+                        <h4 id="title-sore" class="font-bold text-slate-900 text-base mb-1">Mandi Sore & Snack Jus Buah</h4>
+                        <p id="desc-sore" class="text-xs sm:text-sm text-slate-600 leading-relaxed">Mandi sore bersih, makan buah pisang dan puding, lalu membaca buku cerita bersama teman menunggu dijemput.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400 font-medium">
+                        <span><i class="far fa-clock mr-1"></i>15:00 - 16:15 WIB</span>
+                        <span id="badge-sore" class="text-emerald-600 font-bold">Ceria & Bersih</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2: PENGECEKAN BULANAN & GRAFIK TUMBUH KEMBANG -->
+        <section id="sec-perkembangan" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-rose-100 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
+                <div>
+                    <h3 class="font-display text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-chart-line text-brand-600"></i>
+                        Pengecekan Tumbuh Kembang Bulanan
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-500">Catatan perkembangan fisik anak yang diperbarui setiap bulan</p>
+                </div>
+
+                <div class="guru-only">
+                    <button onclick="openModalTambahGrowth()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-2xl transition shadow-md flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Input Pengecekan Bulanan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Stat Badges -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- TB Card -->
+                <div class="bg-gradient-to-br from-rose-50 to-red-100 rounded-2xl p-4 border border-rose-200 relative overflow-hidden">
+                    <div class="text-rose-600 font-semibold text-xs uppercase tracking-wider">Tinggi Badan (TB)</div>
+                    <div class="flex items-baseline mt-2">
+                        <span id="stat-tb" class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+                        <span class="text-slate-600 font-bold ml-1 text-sm">cm</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1" id="stat-tb-sub">Update: -</p>
+                    <i class="fas fa-ruler-vertical absolute right-3 bottom-3 text-rose-200 text-4xl -z-0"></i>
+                </div>
+
+                <!-- BB Card -->
+                <div class="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-2xl p-4 border border-amber-200 relative overflow-hidden">
+                    <div class="text-amber-700 font-semibold text-xs uppercase tracking-wider">Berat Badan (BB)</div>
+                    <div class="flex items-baseline mt-2">
+                        <span id="stat-bb" class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+                        <span class="text-slate-600 font-bold ml-1 text-sm">kg</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1" id="stat-bb-sub">Update: -</p>
+                    <i class="fas fa-weight-scale absolute right-3 bottom-3 text-amber-200 text-4xl -z-0"></i>
+                </div>
+
+                <!-- Lingkar Lengan Card -->
+                <div class="bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl p-4 border border-emerald-200 relative overflow-hidden">
+                    <div class="text-emerald-700 font-semibold text-xs uppercase tracking-wider">Lingkar Lengan</div>
+                    <div class="flex items-baseline mt-2">
+                        <span id="stat-ll" class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+                        <span class="text-slate-600 font-bold ml-1 text-sm">cm</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1" id="stat-ll-sub">Update: -</p>
+                    <i class="fas fa-child absolute right-3 bottom-3 text-emerald-200 text-4xl -z-0"></i>
+                </div>
+
+                <!-- Lingkar Kepala Card -->
+                <div class="bg-gradient-to-br from-indigo-50 to-blue-100 rounded-2xl p-4 border border-indigo-200 relative overflow-hidden">
+                    <div class="text-indigo-700 font-semibold text-xs uppercase tracking-wider">Lingkar Kepala</div>
+                    <div class="flex items-baseline mt-2">
+                        <span id="stat-lk" class="font-display text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+                        <span class="text-slate-600 font-bold ml-1 text-sm">cm</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1" id="stat-lk-sub">Update: -</p>
+                    <i class="fas fa-brain absolute right-3 bottom-3 text-indigo-200 text-4xl -z-0"></i>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="bg-slate-50 rounded-2xl p-4 sm:p-6 border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <h4 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                        <i class="fas fa-chart-area text-brand-600"></i> Grafik Perkembangan Bulanan
+                    </h4>
+                    <span class="text-xs text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200">
+                        Otomatis terbarui saat ada data baru
+                    </span>
+                </div>
+                <div class="h-64 sm:h-80 w-full">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: BIODATA & IDENTITAS ANAK -->
+        <section id="sec-biodata" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-rose-100 relative hidden">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-rose-100 pb-6 mb-6 gap-4">
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <img id="child-avatar" src="https://placehold.co/120x120/fee2e2/991b1b?text=ANAK" alt="Foto Anak" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover border-4 border-brand-500 shadow-md">
+                        <span class="absolute -bottom-2 -right-2 bg-yellow-400 text-slate-900 text-xs font-bold px-2 py-0.5 rounded-full shadow border border-white">Aktif</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 id="child-name" class="font-display text-2xl sm:text-3xl font-bold text-slate-900">Ananda</h2>
+                            <span id="child-age-pill" class="bg-brand-100 text-brand-700 font-bold text-xs px-3 py-1 rounded-full">-</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1 flex items-center gap-3 flex-wrap">
+                            <span><i class="fas fa-id-card text-brand-500 mr-1"></i> NIK: <strong id="child-nik" class="text-slate-700">-</strong></span>
+                            <span><i class="fas fa-users text-amber-500 mr-1"></i> No KK: <strong id="child-kk" class="text-slate-700">-</strong></span>
+                        </p>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                            <i class="fas fa-cake-candles text-pink-500 mr-1"></i> Tanggal Lahir: <strong id="child-dob" class="text-slate-700">-</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons for Guru Mode -->
+                <div class="guru-only flex items-center gap-2 flex-wrap">
+                    <button onclick="openModalEditBiodata()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-2xl transition shadow-md flex items-center gap-2">
+                        <i class="fas fa-user-pen"></i>
+                        <span>Edit Biodata</span>
+                    </button>
+                    <button onclick="confirmDeleteChild()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded-2xl transition shadow-md flex items-center gap-1.5">
+                        <i class="fas fa-trash-can"></i>
+                        <span>Hapus Anak</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Parents & Contact Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Ayah -->
+                <div class="bg-sky-50 rounded-2xl p-4 border border-sky-100 flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-sky-200 text-sky-700 flex items-center justify-center font-bold shrink-0">
+                        <i class="fas fa-user-tie text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-sky-800 uppercase tracking-wide">Data Ayah</span>
+                        <p id="child-father" class="font-bold text-slate-800 text-sm mt-0.5">-</p>
+                        <p class="text-xs text-slate-500">Tahun Lahir: <span id="child-father-dob">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Ibu -->
+                <div class="bg-pink-50 rounded-2xl p-4 border border-pink-100 flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-pink-200 text-pink-700 flex items-center justify-center font-bold shrink-0">
+                        <i class="fas fa-user-nurse text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-pink-800 uppercase tracking-wide">Data Ibu</span>
+                        <p id="child-mother" class="font-bold text-slate-800 text-sm mt-0.5">-</p>
+                        <p class="text-xs text-slate-500">Tahun Lahir: <span id="child-mother-dob">-</span></p>
+                    </div>
+                </div>
+
+                <!-- Kontak & WA -->
+                <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-800 flex items-center justify-center font-bold shrink-0">
+                        <i class="fab fa-whatsapp text-xl"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Kontak Orang Tua</span>
+                        <p id="child-phone" class="font-bold text-slate-800 text-sm mt-0.5">-</p>
+                        <a id="btn-wa-direct" href="#" target="_blank" class="inline-flex items-center gap-1.5 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition shadow">
+                            <i class="fab fa-whatsapp"></i> Chat Whatsapp
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alamat Lengkap -->
+            <div class="mt-4 bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-start space-x-3">
+                <i class="fas fa-location-dot text-brand-600 text-lg mt-0.5"></i>
+                <div>
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Alamat Lengkap Tempat Tinggal:</span>
+                    <p id="child-address" class="text-sm font-medium text-slate-800 mt-0.5">-</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: KOLOM KOMUNIKASI GURU & ORANG TUA -->
+        <section id="sec-komunikasi" class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-rose-100 hidden">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                <div>
+                    <h3 class="font-display text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fas fa-comments text-brand-600"></i>
+                        Kolom Komunikasi Guru & Orang Tua
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-500">Catatan khusus harian dan diskusi terkait perkembangan anak</p>
+                </div>
+            </div>
+
+            <!-- Notes List -->
+            <div id="notes-container" class="space-y-4 mb-6 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                <!-- Dynamically populated -->
+            </div>
+
+            <!-- Add Note Input Box -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <label class="block text-xs font-bold text-slate-700" id="input-note-label">
+                        Tambah Catatan Baru (Sebagai <span id="current-sender-label" class="text-brand-600">Guru Pendamping</span>):
+                    </label>
+
+                    <!-- Teacher Dropdown Selector (Guru Mode Only) -->
+                    <div id="teacher-select-wrapper" class="guru-only flex items-center gap-2">
+                        <span class="text-xs text-slate-500 font-semibold"><i class="fas fa-user-nurse text-brand-500 mr-1"></i>Nama Guru:</span>
+                        <select id="teacher-select" onchange="onTeacherSelectChange()" class="bg-white border border-slate-300 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl focus:ring-2 focus:ring-brand-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Parent Dropdown Selector (Ortu Mode Only) -->
+                    <div id="parent-select-wrapper" class="ortu-only flex items-center gap-2">
+                        <span class="text-xs text-slate-500 font-semibold"><i class="fas fa-users text-amber-500 mr-1"></i>Pilih Pengirim:</span>
+                        <select id="parent-sender-select" onchange="onParentSenderChange()" class="bg-white border border-amber-300 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl focus:ring-2 focus:ring-amber-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="note-input" placeholder="Tuliskan pesan / catatan harian di sini..." class="flex-grow bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <button onclick="addCommunicationNote()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow flex items-center justify-center gap-2 shrink-0">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Kirim Catatan</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-8 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="font-display text-base text-white font-bold tracking-wide">DAYCARE AS-SHOFFAH</p>
+            <p>Membentuk Generasi Cerdas, Ceria, & Berakhlak Mulia</p>
+            <p class="text-slate-600">© 2026 Daycare As-Shoffah System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: LOGIN MODAL -->
+    <div id="modal-login" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-rose-100">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-brand-600 to-rose-600 p-6 text-white text-center relative">
+                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                    <i class="fas fa-child-reaching text-brand-600 text-3xl"></i>
+                </div>
+                <h2 class="font-display text-2xl font-bold">DAYCARE AS-SHOFFAH</h2>
+                <p class="text-xs text-rose-100 mt-1">Masuk ke Sistem Dasbor Kegiatan</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50 text-sm font-bold">
+                <button id="tab-login-ortu" onclick="switchLoginTab('ortu')" class="flex-1 py-3 text-center text-brand-600 border-b-2 border-brand-600">
+                    <i class="fas fa-heart mr-1"></i> Orang Tua
+                </button>
+                <button id="tab-login-guru" onclick="switchLoginTab('guru')" class="flex-1 py-3 text-center text-slate-500 hover:text-slate-800">
+                    <i class="fas fa-user-shield mr-1"></i> Guru / Admin
+                </button>
+            </div>
+
+            <!-- Form Content -->
+            <div class="p-6">
+                <!-- Parent Form -->
+                <form id="form-login-ortu" onsubmit="handleParentLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap Anak:</label>
+                        <select id="login-child-select" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-brand-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Lahir Anak (Password Access):</label>
+                        <input type="date" id="login-child-password" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+                        <p class="text-[11px] text-slate-400 mt-1"><i class="fas fa-shield-alt mr-1"></i>Akses diberikan jika Tanggal Lahir dan Nama Anak sesuai.</p>
+                    </div>
+
+                    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fas fa-right-to-bracket"></i>
+                        <span>Masuk Mode Orang Tua</span>
+                    </button>
+                </form>
+
+                <!-- Teacher Form -->
+                <form id="form-login-guru" onsubmit="handleTeacherLogin(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Nama Guru / Pengirim:</label>
+                        <select id="login-teacher-select" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-brand-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Username Guru:</label>
+                        <input type="text" id="login-guru-user" placeholder="guruhebat" value="guruhebat" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:ring-2 focus:ring-brand-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Password Guru:</label>
+                        <input type="password" id="login-guru-pass" placeholder="Asshoffah@2021" value="Asshoffah@2021" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                        <i class="fas fa-lock-open"></i>
+                        <span>Masuk Mode Guru / Input</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: EDIT BIODATA ANAK -->
+    <div id="modal-edit-bio" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl my-8 overflow-hidden">
+            <div class="bg-amber-500 p-5 text-white flex justify-between items-center">
+                <h3 class="font-display text-xl font-bold flex items-center gap-2">
+                    <i class="fas fa-user-pen"></i> Edit Biodata Anak & Foto
+                </h3>
+                <button onclick="closeModal('modal-edit-bio')" class="text-white hover:text-amber-100 text-xl font-bold">&times;</button>
+            </div>
+
+            <form onsubmit="saveEditBiodata(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+                <!-- Foto Profil Upload Block -->
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                    <label class="block font-bold text-slate-800 mb-1">
+                        <i class="fas fa-camera text-amber-600 mr-1"></i> Foto Profil Anak:
+                    </label>
+                    <div class="space-y-2">
+                        <input type="file" id="edit-avatar-file" accept="image/*" onchange="handleFileSelect(event, 'edit-avatar')" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-200 file:text-amber-900 hover:file:bg-amber-300 cursor-pointer">
+                        <div class="text-[11px] text-slate-500 flex items-center gap-1">
+                            <span>Atau tempel link URL foto:</span>
+                        </div>
+                        <input type="text" id="edit-avatar" placeholder="https://..." class="w-full bg-white border rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Lengkap Anak:</label>
+                        <input type="text" id="edit-nama" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tanggal Lahir:</label>
+                        <input type="date" id="edit-dob" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">NIK Anak:</label>
+                        <input type="text" id="edit-nik" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nomor KK:</label>
+                        <input type="text" id="edit-kk" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Ayah:</label>
+                        <input type="text" id="edit-ayah" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tahun Lahir Ayah:</label>
+                        <input type="number" id="edit-ayah-dob" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Ibu:</label>
+                        <input type="text" id="edit-ibu" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tahun Lahir Ibu:</label>
+                        <input type="number" id="edit-ibu-dob" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-bold text-slate-700 mb-1">No WhatsApp Orang Tua:</label>
+                        <input type="text" id="edit-phone" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Alamat Lengkap:</label>
+                    <textarea id="edit-alamat" rows="2" required class="w-full bg-slate-50 border rounded-xl px-3 py-2"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-edit-bio')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: TAMBAH ANAK BARU -->
+    <div id="modal-tambah-anak" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl my-8 overflow-hidden">
+            <div class="bg-emerald-600 p-5 text-white flex justify-between items-center">
+                <h3 class="font-display text-xl font-bold flex items-center gap-2">
+                    <i class="fas fa-child"></i> Tambah Pendaftaran Anak Baru
+                </h3>
+                <button onclick="closeModal('modal-tambah-anak')" class="text-white hover:text-emerald-100 text-xl font-bold">&times;</button>
+            </div>
+
+            <form onsubmit="saveTambahAnakBaru(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+                <!-- Foto Upload -->
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+                    <label class="block font-bold text-slate-800 mb-1">
+                        <i class="fas fa-camera text-emerald-600 mr-1"></i> Upload Foto Profil Anak:
+                    </label>
+                    <div class="space-y-2">
+                        <input type="file" id="add-avatar-file" accept="image/*" onchange="handleFileSelect(event, 'add-avatar')" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-200 file:text-emerald-900 hover:file:bg-emerald-300 cursor-pointer">
+                        <input type="text" id="add-avatar" placeholder="Atau paste URL foto di sini (https://...)" class="w-full bg-white border rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Lengkap Anak:</label>
+                        <input type="text" id="add-nama" placeholder="Contoh: Aisha Medina Humaira" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tanggal Lahir Anak:</label>
+                        <input type="date" id="add-dob" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">NIK Anak:</label>
+                        <input type="text" id="add-nik" placeholder="16 digit NIK" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nomor Kartu Keluarga (KK):</label>
+                        <input type="text" id="add-kk" placeholder="16 digit No KK" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Ayah:</label>
+                        <input type="text" id="add-ayah" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tahun Lahir Ayah:</label>
+                        <input type="number" id="add-ayah-dob" placeholder="1988" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Ibu:</label>
+                        <input type="text" id="add-ibu" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tahun Lahir Ibu:</label>
+                        <input type="number" id="add-ibu-dob" placeholder="1990" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block font-bold text-slate-700 mb-1">No WhatsApp Orang Tua:</label>
+                        <input type="text" id="add-phone" placeholder="08123456789" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Alamat Lengkap:</label>
+                    <textarea id="add-alamat" rows="2" placeholder="Alamat rumah lengkap..." required class="w-full bg-slate-50 border rounded-xl px-3 py-2"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-tambah-anak')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold">Daftarkan Anak Baru</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: INPUT DATA TUMBUH KEMBANG BULANAN -->
+    <div id="modal-tambah-growth" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div class="bg-brand-600 p-5 text-white flex justify-between items-center">
+                <h3 class="font-display text-xl font-bold flex items-center gap-2">
+                    <i class="fas fa-weight-scale"></i> Input Catatan Bulanan
+                </h3>
+                <button onclick="closeModal('modal-tambah-growth')" class="text-white hover:text-red-100 text-xl font-bold">&times;</button>
+            </div>
+
+            <form onsubmit="saveGrowthData(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Bulan & Tahun Pengecekan:</label>
+                    <input type="month" id="growth-month" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Tinggi Badan (cm):</label>
+                    <input type="number" step="0.1" id="growth-tb" placeholder="Contoh: 95.5" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Berat Badan (kg):</label>
+                    <input type="number" step="0.1" id="growth-bb" placeholder="Contoh: 14.8" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Lingkar Lengan (cm):</label>
+                    <input type="number" step="0.1" id="growth-ll" placeholder="Contoh: 15.3" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Lingkar Kepala (cm):</label>
+                    <input type="number" step="0.1" id="growth-lk" placeholder="Contoh: 48.2" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-tambah-growth')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold">Simpan Data Bulanan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: EDIT KEGIATAN HARIAN -->
+    <div id="modal-edit-activity" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div class="bg-slate-900 p-5 text-white flex justify-between items-center">
+                <h3 id="modal-act-header" class="font-display text-xl font-bold">Edit Laporan Kegiatan</h3>
+                <button onclick="closeModal('modal-edit-activity')" class="text-white hover:text-slate-300 text-xl font-bold">&times;</button>
+            </div>
+
+            <form onsubmit="saveActivityData(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+                <input type="hidden" id="act-key">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Judul / Tema Kegiatan:</label>
+                    <input type="text" id="act-title" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Deskripsi & Catatan Kegiatan:</label>
+                    <textarea id="act-desc" rows="3" required class="w-full bg-slate-50 border rounded-xl px-3 py-2"></textarea>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Status / Badge Hasil:</label>
+                    <input type="text" id="act-badge" placeholder="Contoh: Sangat Baik / Lahap / Nyenyak" required class="w-full bg-slate-50 border rounded-xl px-3 py-2">
+                </div>
+
+                <!-- Foto Kegiatan Upload -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block font-bold text-slate-700 mb-1">
+                        <i class="fas fa-image text-brand-600 mr-1"></i> Foto Dokumentasi Kegiatan:
+                    </label>
+                    <div class="space-y-2">
+                        <input type="file" id="act-img-file" accept="image/*" onchange="handleFileSelect(event, 'act-img')" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-100 file:text-rose-800 hover:file:bg-rose-200 cursor-pointer">
+                        <input type="text" id="act-img" placeholder="Atau tempel URL foto (https://...)" class="w-full bg-white border rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-edit-activity')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 text-white rounded-xl font-bold">Update Laporan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 6: EDIT JAM KEDATANGAN & PENJEMPUTAN -->
+    <div id="modal-edit-time" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden">
+            <div class="bg-emerald-600 p-5 text-white flex justify-between items-center">
+                <h3 class="font-display text-lg font-bold"><i class="fas fa-clock mr-2"></i> Jam Kedatangan & Penjemputan</h3>
+                <button onclick="closeModal('modal-edit-time')" class="text-white hover:text-emerald-100 text-xl font-bold">&times;</button>
+            </div>
+
+            <form onsubmit="saveTimeData(event)" class="p-6 space-y-4 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Jam Kedatangan Pagi:</label>
+                    <input type="time" id="input-arrival" required class="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold text-slate-800">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Jam Penjemputan Sore:</label>
+                    <input type="time" id="input-pickup" class="w-full bg-slate-50 border rounded-xl px-3 py-2 font-bold text-slate-800">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <button type="button" onclick="closeModal('modal-edit-time')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 text-white rounded-xl font-bold">Simpan Jam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 7: BACKUP & RESTORE DATA JSON -->
+    <div id="modal-backup" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div class="bg-slate-800 p-5 text-white flex justify-between items-center">
+                <h3 class="font-display text-lg font-bold"><i class="fas fa-database mr-2 text-yellow-400"></i> Backup & Restore Data</h3>
+                <button onclick="closeModal('modal-backup')" class="text-white hover:text-slate-300 text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-5 text-xs sm:text-sm">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-1"><i class="fas fa-download text-emerald-600 mr-1"></i> Cadangkan Data (Export JSON)</h4>
+                    <p class="text-slate-500 mb-3 text-xs">Simpan seluruh data anak, laporan harian, dan grafik ke file di perangkat Anda.</p>
+                    <button onclick="exportDataJSON()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition shadow flex items-center justify-center gap-2">
+                        <i class="fas fa-file-export"></i> Export Data JSON
+                    </button>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-1"><i class="fas fa-upload text-sky-600 mr-1"></i> Pulihkan Data (Import JSON)</h4>
+                    <p class="text-slate-500 mb-3 text-xs">Pilih file JSON cadangan untuk memulihkan seluruh data aplikasi.</p>
+                    <input type="file" id="import-json-file" accept=".json" class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-100 file:text-sky-800 hover:file:bg-sky-200 cursor-pointer">
+                    <button onclick="importDataJSON()" class="w-full mt-3 bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl transition shadow flex items-center justify-center gap-2">
+                        <i class="fas fa-file-import"></i> Restore Data JSON
+                    </button>
+                </div>
+
+                <div class="pt-2 border-t">
+                    <button onclick="resetToDemoData()" class="w-full bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold py-2 rounded-xl transition text-xs flex items-center justify-center gap-1">
+                        <i class="fas fa-rotate-left"></i> Reset ke Data Contoh Bawaan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Active tab state
+        let activeTab = 'laporan';
+
+        // Official list of teachers
+        const OFFICIAL_TEACHERS = [
+            'Ernawati, A.P',
+            'Dienar Halimah Wulandari, S.Pd',
+            'Siti Aisyah Nurfadilah, S.Sos',
+            'Syifa\' Tazkiyatun Nufus, S.Ag',
+            'Ferdy Rakhmat Dianova, S.Pd'
+        ];
+
+        // Initial Data Structure
+        const DEFAULT_DATA = {
+            currentRole: 'guru',
+            selectedTeacher: 'Ernawati, A.P',
+            selectedParentRole: 'Bunda',
+            selectedChildId: 'anak_2',
+            selectedDate: new Date().toISOString().split('T')[0],
+            children: [
+                {
+                    id: 'anak_1',
+                    nama: 'Muhammad Azka Pratama',
+                    dob: '2023-03-12',
+                    nik: '3578000102030001',
+                    kk: '3578009988770002',
+                    ayah: 'Budi Santoso',
+                    ayahDob: '1990',
+                    ibu: 'Siti Aminah',
+                    ibuDob: '1992',
+                    phone: '081234567890',
+                    avatar: 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=300&q=80',
+                    alamat: 'Jl. Mawar No. 45, RT 03 / RW 02, Surabaya',
+                    growthHistory: [
+                        { month: '2026-07', tb: 93.0, bb: 13.8, ll: 14.8, lk: 47.5 },
+                        { month: '2026-08', tb: 94.2, bb: 14.1, ll: 15.0, lk: 47.8 },
+                        { month: '2026-09', tb: 95.0, bb: 14.5, ll: 15.2, lk: 48.0 },
+                        { month: '2026-10', tb: 95.8, bb: 14.8, ll: 15.4, lk: 48.2 }
+                    ]
+                },
+                {
+                    id: 'anak_2',
+                    nama: 'Aisha Medina Humaira',
+                    dob: '2025-10-27',
+                    nik: '3578000508030004',
+                    kk: '3578009988770005',
+                    ayah: 'Rahmat Hidayat',
+                    ayahDob: '1988',
+                    ibu: 'Dewi Kurnia',
+                    ibuDob: '1991',
+                    phone: '085712345678',
+                    avatar: 'https://images.unsplash.com/photo-1595454114226-09c73e2996d0?auto=format&fit=crop&w=300&q=80',
+                    alamat: 'Jl. Melati No. 12, Sukolilo, Surabaya',
+                    growthHistory: [
+                        { month: '2026-07', tb: 72.0, bb: 8.5, ll: 13.0, lk: 42.8 },
+                        { month: '2026-08', tb: 73.5, bb: 8.9, ll: 13.2, lk: 43.1 },
+                        { month: '2026-09', tb: 75.0, bb: 9.2, ll: 13.5, lk: 43.5 },
+                        { month: '2026-10', tb: 76.2, bb: 9.6, ll: 13.8, lk: 44.0 }
+                    ]
+                }
+            ],
+            dailyReports: {},
+            communications: {}
+        };
+
+        let appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        let growthChartInstance = null;
+
+        window.onload = function() {
+            loadLocalData();
+            
+            document.getElementById('selected-date').value = appData.selectedDate;
+
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+
+            renderApp();
+            
+            // Show login modal initially
+            openModal('modal-login');
+            populateLoginChildOptions();
+            populateTeacherSelectOptions();
+
+            // Set default date picker in login modal for testing/demo
+            const defaultChild = getCurrentChild();
+            if (defaultChild) {
+                document.getElementById('login-child-password').value = defaultChild.dob || '';
+            }
+        };
+
+        // File Handler Helper
+        function handleFileSelect(event, targetInputId) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 3 * 1024 * 1024) {
+                showToast('Ukuran foto terlalu besar! Maksimal 3MB.', true);
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(targetInputId).value = e.target.result;
+                showToast('Foto dari perangkat berhasil dipilih!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function getCurrentChild() {
+            if (!appData.children || appData.children.length === 0) return null;
+            return appData.children.find(c => c.id === appData.selectedChildId) || appData.children[0];
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('modal-active');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('modal-active');
+                modal.classList.add('hidden');
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            if (!toast || !toastMsg || !toastIcon) return;
+
+            toastMsg.innerText = msg;
+            if (isError) {
+                toastIcon.className = 'fas fa-exclamation-circle text-rose-400 text-xl';
+            } else {
+                toastIcon.className = 'fas fa-check-circle text-emerald-400 text-xl';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3200);
+        }
+
+        function formatDateIndo(dateStr) {
+            if (!dateStr) return '-';
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        function calculateAge(dobStr) {
+            if (!dobStr) return '-';
+            const dob = new Date(dobStr);
+            const now = new Date();
+            
+            let years = now.getFullYear() - dob.getFullYear();
+            let months = now.getMonth() - dob.getMonth();
+            let days = now.getDate() - dob.getDate();
+
+            if (days < 0) {
+                months--;
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            if (years <= 0) {
+                return `${Math.max(0, months)} Bulan`;
+            }
+            return `${years} Tahun ${Math.max(0, months)} Bulan`;
+        }
+
+        function loadLocalData() {
+            const saved = localStorage.getItem('daycare_asshoffah_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appData = { ...appData, ...parsed };
+                } catch(e) {
+                    console.error("Error reading saved data:", e);
+                }
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('daycare_asshoffah_data', JSON.stringify(appData));
+        }
+
+        function ensureReportExists(childId, date) {
+            if (!childId) return;
+            const key = `${childId}_${date}`;
+            if (!appData.dailyReports[key]) {
+                appData.dailyReports[key] = {
+                    timeArrival: '07:30',
+                    timePickup: '16:15',
+                    circle_time: {
+                        title: 'Doa Pagi, Murajaah & Zikir',
+                        desc: 'Anak sangat antusias mengawali hari dengan berdoa bersama, menghafal surat pendek, dan bernyanyi ceria.',
+                        badge: 'Sangat Baik',
+                        img: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&q=80'
+                    },
+                    belajar: {
+                        title: 'Mengenal Warna & Motorik Halus',
+                        desc: 'Latihan menyusun geometri kayu dan mewarnai gambar hewan. Anak menunjukkan fokus yang tinggi.',
+                        badge: 'Aktif & Fokus',
+                        img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=600&q=80'
+                    },
+                    makan: {
+                        title: 'Menu: Nasi, Sup Ayam & Tempe',
+                        desc: 'Makan siang habis 1 porsi penuh tanpa tersisa. Anak mau makan sayur sendiri.',
+                        badge: 'Habis 1 Porsi',
+                        img: 'https://images.unsplash.com/photo-1576867757603-05b134ebc379?auto=format&fit=crop&w=600&q=80'
+                    },
+                    tidur: {
+                        title: 'Tidur Siang Nyenyak (2 Jam)',
+                        desc: 'Sebelum tidur berwudhu dan mendengarkan murottal Al-Qur\'an. Tidur dengan tenang.',
+                        badge: 'Nyenyak',
+                        img: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=600&q=80'
+                    },
+                    sore: {
+                        title: 'Mandi Sore & Kudapan Buah',
+                        desc: 'Mandi sore bersih dan memakai pakaian rapi, dilanjutkan snack buah naga dan minum susu.',
+                        badge: 'Bersih & Ceria',
+                        img: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?auto=format&fit=crop&w=600&q=80'
+                    }
+                };
+            }
+
+            if (!appData.communications[key]) {
+                appData.communications[key] = [
+                    {
+                        sender: 'guru',
+                        senderName: 'Ernawati, A.P (Guru Pendamping)',
+                        text: 'Ananda hari ini sangat ceria dan mau berbagi mainan dengan teman-temannya. Nafsu makan juga bagus sekali.',
+                        time: '14:10'
+                    },
+                    {
+                        sender: 'ortu',
+                        senderName: 'Bunda (Orang Tua)',
+                        text: 'Alhamdulillah, terima kasih Ibu Guru. Tolong diingatkan minum air putih yang banyak ya.',
+                        time: '14:25'
+                    }
+                ];
+            }
+        }
+
+        function renderApp() {
+            const child = getCurrentChild();
+            
+            // Render Date
+            const dateObj = new Date(appData.selectedDate);
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            document.getElementById('day-name-display').innerText = days[dateObj.getDay()];
+
+            // Role Adjustments
+            updateRoleUI();
+
+            // Populate Dropdowns
+            populateChildSelect();
+            populateTeacherSelectOptions();
+            populateParentSelectOptions();
+
+            if (!child) {
+                document.getElementById('child-name').innerText = 'Belum Ada Anak';
+                document.getElementById('child-nik').innerText = '-';
+                document.getElementById('child-kk').innerText = '-';
+                document.getElementById('child-father').innerText = '-';
+                document.getElementById('child-father-dob').innerText = '-';
+                document.getElementById('child-mother').innerText = '-';
+                document.getElementById('child-mother-dob').innerText = '-';
+                document.getElementById('child-phone').innerText = '-';
+                document.getElementById('child-address').innerText = '-';
+                document.getElementById('child-avatar').src = 'https://placehold.co/120x120/fee2e2/991b1b?text=KOSONG';
+                document.getElementById('child-dob').innerText = '-';
+                document.getElementById('child-age-pill').innerText = '-';
+                return;
+            }
+
+            // Render Biodata
+            document.getElementById('child-name').innerText = child.nama;
+            document.getElementById('child-nik').innerText = child.nik || '-';
+            document.getElementById('child-kk').innerText = child.kk || '-';
+            document.getElementById('child-father').innerText = child.ayah || '-';
+            document.getElementById('child-father-dob').innerText = child.ayahDob || '-';
+            document.getElementById('child-mother').innerText = child.ibu || '-';
+            document.getElementById('child-mother-dob').innerText = child.ibuDob || '-';
+            document.getElementById('child-phone').innerText = child.phone || '-';
+            document.getElementById('child-address').innerText = child.alamat || '-';
+            document.getElementById('child-avatar').src = child.avatar || 'https://placehold.co/120x120/fee2e2/991b1b?text=ANAK';
+
+            // Age & DOB Calculation
+            document.getElementById('child-dob').innerText = formatDateIndo(child.dob);
+            document.getElementById('child-age-pill').innerText = calculateAge(child.dob);
+
+            // WhatsApp Direct Button
+            let formattedPhone = (child.phone || '').replace(/[^0-9]/g, '');
+            if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.slice(1);
+            document.getElementById('btn-wa-direct').href = `https://wa.me/${formattedPhone}?text=Halo%20Orang%20Tua%20Ananda%20${encodeURIComponent(child.nama)}`;
+
+            // Render Growth Cards & Chart
+            renderGrowthStats(child);
+
+            // Render Daily Report Activities
+            renderDailyReport();
+
+            // Render Communication
+            renderCommunication();
+        }
+
+        function updateRoleUI() {
+            const isGuru = appData.currentRole === 'guru';
+            
+            const guruElements = document.querySelectorAll('.guru-only');
+            guruElements.forEach(el => {
+                if (isGuru) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+
+            const ortuElements = document.querySelectorAll('.ortu-only');
+            ortuElements.forEach(el => {
+                if (isGuru) el.classList.add('hidden');
+                else el.classList.remove('hidden');
+            });
+
+            if (isGuru) {
+                document.getElementById('role-text').innerText = 'Mode Guru / Input';
+                document.getElementById('role-icon').className = 'fas fa-user-shield mr-2 text-yellow-300';
+                document.getElementById('target-role-label').innerText = 'Mode Orang Tua';
+                document.getElementById('current-sender-label').innerText = appData.selectedTeacher || 'Guru Pendamping';
+                document.getElementById('current-sender-label').className = 'text-brand-600 font-bold';
+            } else {
+                document.getElementById('role-text').innerText = 'Mode Orang Tua (Lihat)';
+                document.getElementById('role-icon').className = 'fas fa-heart mr-2 text-pink-300';
+                document.getElementById('target-role-label').innerText = 'Mode Guru';
+                
+                const child = getCurrentChild();
+                const pRole = appData.selectedParentRole || 'Bunda';
+                const parentName = child ? ((pRole === 'Ayah') ? child.ayah : child.ibu) : 'Orang Tua';
+                document.getElementById('current-sender-label').innerText = `${pRole} (${parentName})`;
+                document.getElementById('current-sender-label').className = 'text-amber-600 font-bold';
+            }
+        }
+
+        function populateTeacherSelectOptions() {
+            const selectNote = document.getElementById('teacher-select');
+            const selectLogin = document.getElementById('login-teacher-select');
+
+            if (selectNote) {
+                selectNote.innerHTML = '';
+                OFFICIAL_TEACHERS.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    opt.text = t;
+                    if (t === appData.selectedTeacher) opt.selected = true;
+                    selectNote.appendChild(opt);
+                });
+            }
+
+            if (selectLogin) {
+                selectLogin.innerHTML = '';
+                OFFICIAL_TEACHERS.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t;
+                    opt.text = t;
+                    if (t === appData.selectedTeacher) opt.selected = true;
+                    selectLogin.appendChild(opt);
+                });
+            }
+        }
+
+        function onTeacherSelectChange() {
+            const select = document.getElementById('teacher-select');
+            appData.selectedTeacher = select.value;
+            saveData();
+            updateRoleUI();
+        }
+
+        function populateParentSelectOptions() {
+            const select = document.getElementById('parent-sender-select');
+            if (!select) return;
+            const child = getCurrentChild();
+            select.innerHTML = '';
+
+            const optBunda = document.createElement('option');
+            optBunda.value = 'Bunda';
+            optBunda.text = `Bunda (${child ? child.ibu || 'Ibu' : 'Ibu'})`;
+            if (appData.selectedParentRole === 'Bunda') optBunda.selected = true;
+            select.appendChild(optBunda);
+
+            const optAyah = document.createElement('option');
+            optAyah.value = 'Ayah';
+            optAyah.text = `Ayah (${child ? child.ayah || 'Ayah' : 'Ayah'})`;
+            if (appData.selectedParentRole === 'Ayah') optAyah.selected = true;
+            select.appendChild(optAyah);
+        }
+
+        function onParentSenderChange() {
+            const select = document.getElementById('parent-sender-select');
+            appData.selectedParentRole = select.value;
+            saveData();
+            updateRoleUI();
+        }
+
+        function populateChildSelect() {
+            const select = document.getElementById('child-select');
+            select.innerHTML = '';
+            appData.children.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.text = c.nama;
+                if (c.id === appData.selectedChildId) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            if (appData.currentRole === 'ortu') {
+                select.disabled = true;
+                select.classList.add('opacity-75');
+            } else {
+                select.disabled = false;
+                select.classList.remove('opacity-75');
+            }
+        }
+
+        function populateLoginChildOptions() {
+            const select = document.getElementById('login-child-select');
+            select.innerHTML = '';
+            appData.children.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.text = c.nama;
+                if (c.id === appData.selectedChildId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function switchTab(tabName) {
+            activeTab = tabName;
+            const tabs = ['laporan', 'perkembangan', 'biodata', 'komunikasi'];
+            
+            tabs.forEach(t => {
+                const sec = document.getElementById(`sec-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                
+                if (t === tabName) {
+                    if (sec) sec.classList.remove('hidden');
+                    if (btn) {
+                        btn.className = 'tab-btn flex-1 sm:flex-none px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-brand-600 text-white shadow-md';
+                    }
+                } else {
+                    if (sec) sec.classList.add('hidden');
+                    if (btn) {
+                        btn.className = 'tab-btn flex-1 sm:flex-none px-5 py-3 rounded-xl font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 bg-slate-100 text-slate-600 hover:bg-slate-200';
+                    }
+                }
+            });
+
+            if (tabName === 'perkembangan') {
+                const child = getCurrentChild();
+                if (child) renderGrowthStats(child);
+            }
+        }
+
+        function renderGrowthStats(child) {
+            const history = child ? (child.growthHistory || []) : [];
+            
+            if (history.length === 0) {
+                document.getElementById('stat-tb').innerText = '0';
+                document.getElementById('stat-bb').innerText = '0';
+                document.getElementById('stat-ll').innerText = '0';
+                document.getElementById('stat-lk').innerText = '0';
+                if (growthChartInstance) growthChartInstance.destroy();
+                return;
+            }
+
+            const latest = history[history.length - 1];
+
+            document.getElementById('stat-tb').innerText = latest.tb;
+            document.getElementById('stat-bb').innerText = latest.bb;
+            document.getElementById('stat-ll').innerText = latest.ll;
+            document.getElementById('stat-lk').innerText = latest.lk;
+
+            document.getElementById('stat-tb-sub').innerText = `Bulan: ${latest.month}`;
+            document.getElementById('stat-bb-sub').innerText = `Bulan: ${latest.month}`;
+            document.getElementById('stat-ll-sub').innerText = `Bulan: ${latest.month}`;
+            document.getElementById('stat-lk-sub').innerText = `Bulan: ${latest.month}`;
+
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            
+            const labels = history.map(h => h.month);
+            const tbData = history.map(h => h.tb);
+            const bbData = history.map(h => h.bb);
+            const llData = history.map(h => h.ll);
+            const lkData = history.map(h => h.lk);
+
+            if (growthChartInstance) {
+                growthChartInstance.destroy();
+            }
+
+            growthChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Tinggi Badan (cm)',
+                            data: tbData,
+                            borderColor: '#e11d48',
+                            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Berat Badan (kg)',
+                            data: bbData,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Lingkar Lengan (cm)',
+                            data: llData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Lingkar Kepala (cm)',
+                            data: lkData,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                usePointStyle: true
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: '#f1f5f9' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDailyReport() {
+            if (!appData.selectedChildId) return;
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+
+            const report = appData.dailyReports[key];
+            if (!report) return;
+
+            document.getElementById('time-arrival').innerText = (report.timeArrival || '07:30') + ' WIB';
+            document.getElementById('time-pickup').innerText = (report.timePickup || '16:15') + ' WIB';
+
+            const acts = ['circle_time', 'belajar', 'makan', 'tidur', 'sore'];
+            acts.forEach(act => {
+                if (report[act]) {
+                    document.getElementById(`title-${act}`).innerText = report[act].title;
+                    document.getElementById(`desc-${act}`).innerText = report[act].desc;
+                    document.getElementById(`badge-${act}`).innerText = report[act].badge;
+                    if (report[act].img) {
+                        document.getElementById(`img-${act}`).src = report[act].img;
+                    }
+                }
+            });
+        }
+
+        function renderCommunication() {
+            if (!appData.selectedChildId) return;
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+
+            const notes = appData.communications[key] || [];
+            const container = document.getElementById('notes-container');
+            container.innerHTML = '';
+
+            if (notes.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-400 text-xs">
+                        Belum ada catatan komunikasi untuk tanggal ini. Tuliskan pesan di bawah!
+                    </div>
+                `;
+                return;
+            }
+
+            notes.forEach(n => {
+                const isGuru = n.sender === 'guru';
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-2xl border ${isGuru ? 'bg-rose-50/60 border-rose-100 ml-0 mr-6 sm:mr-12' : 'bg-amber-50/60 border-amber-100 ml-6 sm:ml-12 mr-0'}`;
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-xs ${isGuru ? 'text-brand-700' : 'text-amber-800'} flex items-center gap-1.5">
+                            <i class="fas ${isGuru ? 'fa-user-tie text-brand-500' : 'fa-heart text-amber-500'}"></i>
+                            ${n.senderName}
+                        </span>
+                        <span class="text-[11px] text-slate-400 font-medium">${n.time} WIB</span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-700 leading-relaxed">${n.text}</p>
+                `;
+                container.appendChild(div);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addCommunicationNote() {
+            const input = document.getElementById('note-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+
+            const isGuru = appData.currentRole === 'guru';
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            let senderTitle = '';
+            if (isGuru) {
+                senderTitle = `${appData.selectedTeacher || 'Guru'} (Guru Pendamping)`;
+            } else {
+                const child = getCurrentChild();
+                const pRole = appData.selectedParentRole || 'Bunda';
+                const parentName = child ? ((pRole === 'Ayah') ? child.ayah : child.ibu) : 'Orang Tua';
+                senderTitle = `${pRole} ${parentName}`;
+            }
+
+            appData.communications[key].push({
+                sender: isGuru ? 'guru' : 'ortu',
+                senderName: senderTitle,
+                text: val,
+                time: timeStr
+            });
+
+            input.value = '';
+            saveData();
+            renderCommunication();
+            showToast('Catatan komunikasi berhasil dikirim!');
+        }
+
+        function onDateChange() {
+            appData.selectedDate = document.getElementById('selected-date').value;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+            saveData();
+            renderApp();
+        }
+
+        function onChildSelectChange() {
+            appData.selectedChildId = document.getElementById('child-select').value;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+            saveData();
+            renderApp();
+        }
+
+        function toggleRole() {
+            appData.currentRole = appData.currentRole === 'guru' ? 'ortu' : 'guru';
+            saveData();
+            renderApp();
+            showToast(`Beralih ke ${appData.currentRole === 'guru' ? 'Mode Guru' : 'Mode Orang Tua'}`);
+        }
+
+        function refreshDashboard() {
+            renderApp();
+            showToast('Dasbor diperbarui!');
+        }
+
+        function logout() {
+            openModal('modal-login');
+            populateLoginChildOptions();
+        }
+
+        function switchLoginTab(role) {
+            if (role === 'ortu') {
+                document.getElementById('form-login-ortu').classList.remove('hidden');
+                document.getElementById('form-login-guru').classList.add('hidden');
+                document.getElementById('tab-login-ortu').className = 'flex-1 py-3 text-center text-brand-600 border-b-2 border-brand-600 font-bold';
+                document.getElementById('tab-login-guru').className = 'flex-1 py-3 text-center text-slate-500 hover:text-slate-800 font-bold';
+            } else {
+                document.getElementById('form-login-ortu').classList.add('hidden');
+                document.getElementById('form-login-guru').classList.remove('hidden');
+                document.getElementById('tab-login-guru').className = 'flex-1 py-3 text-center text-brand-600 border-b-2 border-brand-600 font-bold';
+                document.getElementById('tab-login-ortu').className = 'flex-1 py-3 text-center text-slate-500 hover:text-slate-800 font-bold';
+            }
+        }
+
+        function handleParentLogin(e) {
+            e.preventDefault();
+            const childId = document.getElementById('login-child-select').value;
+            const passDob = document.getElementById('login-child-password').value;
+
+            const child = appData.children.find(c => c.id === childId);
+            if (child) {
+                if (!passDob || passDob !== child.dob) {
+                    showToast('Tanggal Lahir tidak cocok dengan Nama Lengkap Anak!', true);
+                    return;
+                }
+                appData.selectedChildId = childId;
+                appData.currentRole = 'ortu';
+                saveData();
+                renderApp();
+                closeModal('modal-login');
+                showToast(`Selamat Datang, Orang Tua dari ${child.nama}!`);
+            } else {
+                showToast('Pilih nama anak terlebih dahulu!', true);
+            }
+        }
+
+        function handleTeacherLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-guru-user').value.trim();
+            const pass = document.getElementById('login-guru-pass').value.trim();
+            const teacher = document.getElementById('login-teacher-select').value;
+
+            if (user === 'guruhebat' && pass === 'Asshoffah@2021') {
+                appData.currentRole = 'guru';
+                if (teacher) appData.selectedTeacher = teacher;
+                saveData();
+                renderApp();
+                closeModal('modal-login');
+                showToast(`Selamat Datang ${appData.selectedTeacher} di Mode Input Guru!`);
+            } else {
+                showToast('Username atau Password Guru salah! Akses ditolak.', true);
+            }
+        }
+
+        // Modal Action Triggers & Form Savers
+        function openModalEditBiodata() {
+            const child = getCurrentChild();
+            if (!child) return;
+
+            document.getElementById('edit-nama').value = child.nama || '';
+            document.getElementById('edit-dob').value = child.dob || '';
+            document.getElementById('edit-nik').value = child.nik || '';
+            document.getElementById('edit-kk').value = child.kk || '';
+            document.getElementById('edit-ayah').value = child.ayah || '';
+            document.getElementById('edit-ayah-dob').value = child.ayahDob || '';
+            document.getElementById('edit-ibu').value = child.ibu || '';
+            document.getElementById('edit-ibu-dob').value = child.ibuDob || '';
+            document.getElementById('edit-phone').value = child.phone || '';
+            document.getElementById('edit-avatar').value = child.avatar || '';
+            document.getElementById('edit-alamat').value = child.alamat || '';
+            if (document.getElementById('edit-avatar-file')) document.getElementById('edit-avatar-file').value = '';
+            openModal('modal-edit-bio');
+        }
+
+        function saveEditBiodata(e) {
+            e.preventDefault();
+            const child = getCurrentChild();
+            if (!child) return;
+
+            child.nama = document.getElementById('edit-nama').value.trim();
+            child.dob = document.getElementById('edit-dob').value;
+            child.nik = document.getElementById('edit-nik').value.trim();
+            child.kk = document.getElementById('edit-kk').value.trim();
+            child.ayah = document.getElementById('edit-ayah').value.trim();
+            child.ayahDob = document.getElementById('edit-ayah-dob').value;
+            child.ibu = document.getElementById('edit-ibu').value.trim();
+            child.ibuDob = document.getElementById('edit-ibu-dob').value;
+            child.phone = document.getElementById('edit-phone').value.trim();
+            child.avatar = document.getElementById('edit-avatar').value.trim();
+            child.alamat = document.getElementById('edit-alamat').value.trim();
+
+            saveData();
+            renderApp();
+            closeModal('modal-edit-bio');
+            showToast('Biodata & foto anak berhasil diperbarui!');
+        }
+
+        function openModalTambahAnak() {
+            document.getElementById('add-nama').value = '';
+            document.getElementById('add-dob').value = '';
+            document.getElementById('add-nik').value = '';
+            document.getElementById('add-kk').value = '';
+            document.getElementById('add-ayah').value = '';
+            document.getElementById('add-ayah-dob').value = '';
+            document.getElementById('add-ibu').value = '';
+            document.getElementById('add-ibu-dob').value = '';
+            document.getElementById('add-phone').value = '';
+            document.getElementById('add-avatar').value = '';
+            document.getElementById('add-alamat').value = '';
+            if (document.getElementById('add-avatar-file')) document.getElementById('add-avatar-file').value = '';
+            openModal('modal-tambah-anak');
+        }
+
+        function saveTambahAnakBaru(e) {
+            e.preventDefault();
+            const newId = 'anak_' + Date.now();
+            const newChild = {
+                id: newId,
+                nama: document.getElementById('add-nama').value.trim(),
+                dob: document.getElementById('add-dob').value,
+                nik: document.getElementById('add-nik').value.trim(),
+                kk: document.getElementById('add-kk').value.trim(),
+                ayah: document.getElementById('add-ayah').value.trim(),
+                ayahDob: document.getElementById('add-ayah-dob').value,
+                ibu: document.getElementById('add-ibu').value.trim(),
+                ibuDob: document.getElementById('add-ibu-dob').value,
+                phone: document.getElementById('add-phone').value.trim(),
+                avatar: document.getElementById('add-avatar').value.trim() || 'https://placehold.co/120x120/fee2e2/991b1b?text=ANAK',
+                alamat: document.getElementById('add-alamat').value.trim(),
+                growthHistory: [
+                    { month: new Date().toISOString().slice(0,7), tb: 80.0, bb: 10.0, ll: 14.0, lk: 45.0 }
+                ]
+            };
+
+            appData.children.push(newChild);
+            appData.selectedChildId = newId;
+            ensureReportExists(newId, appData.selectedDate);
+            saveData();
+            renderApp();
+            closeModal('modal-tambah-anak');
+            showToast(`Ananda ${newChild.nama} berhasil didaftarkan!`);
+        }
+
+        function confirmDeleteChild() {
+            const child = getCurrentChild();
+            if (!child) return;
+
+            if (confirm(`Apakah Anda yakin ingin menghapus data ananda ${child.nama}? Data yang dihapus tidak dapat dikembalikan.`)) {
+                appData.children = appData.children.filter(c => c.id !== child.id);
+                if (appData.children.length > 0) {
+                    appData.selectedChildId = appData.children[0].id;
+                } else {
+                    appData.selectedChildId = null;
+                }
+                saveData();
+                renderApp();
+                showToast('Data anak berhasil dihapus');
+            }
+        }
+
+        function openModalTambahGrowth() {
+            document.getElementById('growth-month').value = new Date().toISOString().slice(0, 7);
+            document.getElementById('growth-tb').value = '';
+            document.getElementById('growth-bb').value = '';
+            document.getElementById('growth-ll').value = '';
+            document.getElementById('growth-lk').value = '';
+            openModal('modal-tambah-growth');
+        }
+
+        function saveGrowthData(e) {
+            e.preventDefault();
+            const child = getCurrentChild();
+            if (!child) return;
+
+            const month = document.getElementById('growth-month').value;
+            const tb = parseFloat(document.getElementById('growth-tb').value);
+            const bb = parseFloat(document.getElementById('growth-bb').value);
+            const ll = parseFloat(document.getElementById('growth-ll').value);
+            const lk = parseFloat(document.getElementById('growth-lk').value);
+
+            if (!child.growthHistory) child.growthHistory = [];
+            
+            const existingIndex = child.growthHistory.findIndex(g => g.month === month);
+            if (existingIndex >= 0) {
+                child.growthHistory[existingIndex] = { month, tb, bb, ll, lk };
+            } else {
+                child.growthHistory.push({ month, tb, bb, ll, lk });
+                child.growthHistory.sort((a, b) => a.month.localeCompare(b.month));
+            }
+
+            saveData();
+            renderGrowthStats(child);
+            closeModal('modal-tambah-growth');
+            showToast('Data tumbuh kembang bulanan berhasil diperbarui!');
+        }
+
+        function openModalEditActivity(actKey) {
+            if (!appData.selectedChildId) return;
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+            const actData = appData.dailyReports[key][actKey] || {};
+
+            document.getElementById('act-key').value = actKey;
+            document.getElementById('act-title').value = actData.title || '';
+            document.getElementById('act-desc').value = actData.desc || '';
+            document.getElementById('act-badge').value = actData.badge || '';
+            document.getElementById('act-img').value = actData.img || '';
+            if (document.getElementById('act-img-file')) document.getElementById('act-img-file').value = '';
+
+            document.getElementById('modal-act-header').innerText = `Edit Kegiatan (${actKey.replace('_', ' ').toUpperCase()})`;
+            openModal('modal-edit-activity');
+        }
+
+        function saveActivityData(e) {
+            e.preventDefault();
+            const actKey = document.getElementById('act-key').value;
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+
+            appData.dailyReports[key][actKey] = {
+                title: document.getElementById('act-title').value.trim(),
+                desc: document.getElementById('act-desc').value.trim(),
+                badge: document.getElementById('act-badge').value.trim(),
+                img: document.getElementById('act-img').value.trim()
+            };
+
+            saveData();
+            renderDailyReport();
+            closeModal('modal-edit-activity');
+            showToast('Laporan kegiatan harian berhasil diupdate!');
+        }
+
+        function openModalEditTime() {
+            if (!appData.selectedChildId) return;
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+            const report = appData.dailyReports[key];
+
+            document.getElementById('input-arrival').value = report.timeArrival || '07:30';
+            document.getElementById('input-pickup').value = report.timePickup || '16:15';
+            openModal('modal-edit-time');
+        }
+
+        function saveTimeData(e) {
+            e.preventDefault();
+            const key = `${appData.selectedChildId}_${appData.selectedDate}`;
+            ensureReportExists(appData.selectedChildId, appData.selectedDate);
+
+            appData.dailyReports[key].timeArrival = document.getElementById('input-arrival').value;
+            appData.dailyReports[key].timePickup = document.getElementById('input-pickup').value;
+
+            saveData();
+            renderDailyReport();
+            closeModal('modal-edit-time');
+            showToast('Jam kedatangan & penjemputan berhasil disimpan!');
+        }
+
+        // Backup & Restore Utilities
+        function openModalBackup() {
+            openModal('modal-backup');
+        }
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `Daycare_AsShoffah_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('File backup berhasil diunduh!');
+        }
+
+        function importDataJSON() {
+            const fileInput = document.getElementById('import-json-file');
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('Pilih file backup JSON terlebih dahulu!', true);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && parsed.children) {
+                        appData = parsed;
+                        saveData();
+                        renderApp();
+                        closeModal('modal-backup');
+                        showToast('Data aplikasi berhasil dipulihkan!');
+                    } else {
+                        showToast('Format file JSON tidak valid!', true);
+                    }
+                } catch(err) {
+                    showToast('Gagal membaca file JSON!', true);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetToDemoData() {
+            if (confirm('Apakah Anda yakin ingin mengembalikan seluruh data ke data contoh awal? Data yang belum di-backup akan hilang.')) {
+                appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                saveData();
+                renderApp();
+                closeModal('modal-backup');
+                showToast('Aplikasi berhasil di-reset ke data contoh awal.');
+            }
+        }
+    </script>
+</body>
+</html>
